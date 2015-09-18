@@ -41,9 +41,9 @@
 			<td>Cover Image</td>
 		</tr>
 	</table>
-	<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-	<script src="bootstrap/js/bootstrap.min.js"></script>
-	<script type="text/javascript">
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript">
 
 var Player = function(){
 	this.playing = false;
@@ -61,8 +61,11 @@ Song.prototype.fetchSong = function (){
 }
 
 Song.prototype.getSongsArtistsAndCoverImages = function (songs_object){
+	localStorage.setItem('songs_object', JSON.stringify(songs_object));
+	window.songListLocalStored = localStorage.getItem('songs_object');
+	songListLocalStored = JSON.parse(songListLocalStored)
 	this.render(songs_object);
-	this.upDatePlayerWithSearchedSong(songs_object);
+	this.upDatePlayerWithSearchedSong(songs_object,0);
 }
 
 Song.prototype.render = function (songs_object){	
@@ -70,18 +73,18 @@ Song.prototype.render = function (songs_object){
 	$('.table-striped tr:gt(0)').remove();
 	for (var i=0; i<songs_object.length; i++){
 		$(".table-striped").append($(
-			"<tr>"+"<td><p>"+songs_object[i].artists[0].name+"</p></td>"+
+			"<tr> "+"<td><p>"+songs_object[i].artists[0].name+"</p></td>"+
 			"<td><p>"+songs_object[i].album.name+"</p></td>"+
 			"<td><p>"+songs_object[i].name+"</p></td>"+
-			"<td>"+"<img src='"+songs_object[i].album.images[1].url+"'>"+"</td>"+"</tr>"));
+			"<td>"+"<a id='"+i+"' class='band-pic' href='javascript:;'><img src='"+songs_object[i].album.images[1].url+"'>"+"</a></td>"+"</tr>"));
 	}
 }
 
-Song.prototype.upDatePlayerWithSearchedSong = function (songs_object){
-	$(".title").text(songs_object.tracks.items[0].name);
-	$(".author").text(songs_object.tracks.items[0].artists[0].name);
-	$("#album-img").attr("src",songs_object.tracks.items[0].album.images[1].url);
-	$("#audio-song").attr("src",songs_object.tracks.items[0].preview_url);	
+Song.prototype.upDatePlayerWithSearchedSong = function (songs_object, index){
+	$(".title").text(songs_object.tracks.items[index].name);
+	$(".author").text(songs_object.tracks.items[index].artists[0].name);
+	$("#album-img").attr("src",songs_object.tracks.items[index].album.images[1].url);
+	$("#audio-song").attr("src",songs_object.tracks.items[index].preview_url);	
 }
 
 Player.prototype.playOrPauseSong = function (){
@@ -106,16 +109,21 @@ $(document).on("click", "#search-song-button", function (event){
 })
 
 var play_music = new Player()
-$(document).on("click", ".btn-play", function(event){
+	$(document).on("click", ".btn-play", function(event){
 	event.preventDefault();
 	play_music.playOrPauseSong()
+})
+
+$(document).on("click", ".band-pic", function(event){
+	event.preventDefault()
+	var bandID = parseInt($(this).attr('id'))
+	newSongSearch.upDatePlayerWithSearchedSong(songListLocalStored, bandID)
 })
 
 $("#audio-song").on("timeupdate",function(){
 	play_music.showProgressBar()
 })
 
-	</script>
-
+</script>
 </body>
 </html>
