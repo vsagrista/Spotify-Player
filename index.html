@@ -26,6 +26,7 @@
 		  </div>
 		</div>
 		</div>
+		
 		<div class="cover">
 		<img id="album-img" src="https://i.scdn.co/image/04da6dfc1f5f45fdeba938a0cc71cf372524fd43">
 		</div>
@@ -51,26 +52,32 @@ var Song = function(song){
 
 Song.prototype.FetchSong = function (){
 	$.ajax({url: "https://api.spotify.com/v1/search?type=track&query="+this.song+"",
-  	success: this.getSongsArtistsAndCoverImages.bind(this) 
+  	success: this.getSongsArtistsAndCoverImages.bind(this); 
 });
 }
 
 Song.prototype.getSongsArtistsAndCoverImages = function (songs_object){
-
-	this.render(songs_object)
+	this.render(songs_object);
+	this.upDatePlayerWithSearchedSong(songs_object);
 }
 
 Song.prototype.render = function (songs_object){	
-
-	songs_object = songs_object.tracks.items 
-	
+	songs_object = songs_object.tracks.items; 
+	$('.table-striped tr:gt(0)').remove();
 	for (var i=0; i<songs_object.length; i++){
 		$(".table-striped").append($(
 			"<tr>"+"<td><p>"+songs_object[i].artists[0].name+"</p></td>"+
 			"<td><p>"+songs_object[i].album.name+"</p></td>"+
 			"<td><p>"+songs_object[i].name+"</p></td>"+
-			"<td>"+"<img src='"+songs_object[i].album.images[1].url+"'>"+"</td>"+"</tr>"))
+			"<td>"+"<img src='"+songs_object[i].album.images[1].url+"'>"+"</td>"+"</tr>"));
 	}
+}
+
+Song.prototype.upDatePlayerWithSearchedSong = function (songs_object){
+	$(".title").text(songs_object.tracks.items[0].name);
+	$(".author").text(songs_object.tracks.items[0].artists[0].name);
+	$("#album-img").attr("src",songs_object.tracks.items[0].album.images[1].url);
+
 }
 
 $(document).on("click", "#search-song-button", function (event){
