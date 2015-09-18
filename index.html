@@ -26,12 +26,12 @@
 		  </div>
 		</div>
 		</div>
-		
+
 		<div class="cover">
 		<img id="album-img" src="https://i.scdn.co/image/04da6dfc1f5f45fdeba938a0cc71cf372524fd43">
 		</div>
 
-		<audio src="https://p.scdn.co/mp3-preview/8e9c5ffdc38e91659bfe8b6bd44650dfc25a3d31"></audio>
+		<audio id="audio-song" src="https://p.scdn.co/mp3-preview/8e9c5ffdc38e91659bfe8b6bd44650dfc25a3d31"></audio>
 	</div>
 	<table class="table table-striped">
 		<tr>
@@ -45,14 +45,9 @@
 	<script src="bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript">
 
-
-var Song = function(song){
-	this.song = song;
-}
-
 Song.prototype.FetchSong = function (){
 	$.ajax({url: "https://api.spotify.com/v1/search?type=track&query="+this.song+"",
-  	success: this.getSongsArtistsAndCoverImages.bind(this); 
+  	success: this.getSongsArtistsAndCoverImages.bind(this)
 });
 }
 
@@ -77,14 +72,38 @@ Song.prototype.upDatePlayerWithSearchedSong = function (songs_object){
 	$(".title").text(songs_object.tracks.items[0].name);
 	$(".author").text(songs_object.tracks.items[0].artists[0].name);
 	$("#album-img").attr("src",songs_object.tracks.items[0].album.images[1].url);
+	$("#audio-song").attr("src",songs_object.tracks.items[0].preview_url);	
+}
 
+Player.prototype.playOrPauseSong = function (){
+	if (this.playing == true){
+		$("#audio-song").trigger("pause");
+		this.playing = false
+	} else {
+        $("#audio-song").trigger("play");
+        this.playing = true;
+      }
+}
+
+var Player = function(){
+	this.playing = false
+}
+
+var Song = function(song){
+	this.song = song;
 }
 
 $(document).on("click", "#search-song-button", function (event){
 	event.preventDefault();
 	newSongSearch = new Song($("input[name=name]").val());
 	newSongSearch.FetchSong();
-});
+})
+
+var play_music = new Player()
+$(document).on("click", ".btn-play", function(event){
+	event.preventDefault();
+	play_music.playOrPauseSong()
+})
 
 	</script>
 
