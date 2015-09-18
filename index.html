@@ -2,9 +2,18 @@
 <head>
 	<title></title>
 	<link rel="stylesheet" type="text/css" href="styles.css">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 	<div class="widget">
+		<form>
+			<h1>Search for a song</h1>
+			<label>Name:</label>
+			<input name="name">
+			<button type="submit" id="search-song-button" class="btn btn-primary">Search!</button>
+		</form>
 		<div class="header">
 		<div class="btn-play disabled"></div>
 
@@ -18,11 +27,59 @@
 		</div>
 		</div>
 		<div class="cover">
-		<img src="https://i.scdn.co/image/04da6dfc1f5f45fdeba938a0cc71cf372524fd43">
+		<img id="album-img" src="https://i.scdn.co/image/04da6dfc1f5f45fdeba938a0cc71cf372524fd43">
 		</div>
 
 		<audio src="https://p.scdn.co/mp3-preview/8e9c5ffdc38e91659bfe8b6bd44650dfc25a3d31"></audio>
 	</div>
+	<table class="table table-striped">
+		<tr>
+			<td>Band Name</td>
+			<td>Album Name</td>
+			<td>Song</td>
+			<td>Cover Image</td>
+		</tr>
+	</table>
+	<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+	<script src="bootstrap/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+
+
+var Song = function(song){
+	this.song = song;
+}
+
+Song.prototype.FetchSong = function (){
+	$.ajax({url: "https://api.spotify.com/v1/search?type=track&query="+this.song+"",
+  	success: this.getSongsArtistsAndCoverImages.bind(this) 
+});
+}
+
+Song.prototype.getSongsArtistsAndCoverImages = function (songs_object){
+
+	this.render(songs_object)
+}
+
+Song.prototype.render = function (songs_object){	
+
+	songs_object = songs_object.tracks.items 
+	
+	for (var i=0; i<songs_object.length; i++){
+		$(".table-striped").append($(
+			"<tr>"+"<td><p>"+songs_object[i].artists[0].name+"</p></td>"+
+			"<td><p>"+songs_object[i].album.name+"</p></td>"+
+			"<td><p>"+songs_object[i].name+"</p></td>"+
+			"<td>"+"<img src='"+songs_object[i].album.images[1].url+"'>"+"</td>"+"</tr>"))
+	}
+}
+
+$(document).on("click", "#search-song-button", function (event){
+	event.preventDefault();
+	newSongSearch = new Song($("input[name=name]").val());
+	newSongSearch.FetchSong();
+});
+
+	</script>
 
 </body>
 </html>
