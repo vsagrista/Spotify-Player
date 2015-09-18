@@ -22,7 +22,7 @@
 		  <p class="author">alt-J</p>
 
 		  <div class="seekbar">
-		    <progress value="5" max="30"></progress>
+		    <progress value="0" max="30"></progress>
 		  </div>
 		</div>
 		</div>
@@ -45,10 +45,19 @@
 	<script src="bootstrap/js/bootstrap.min.js"></script>
 	<script type="text/javascript">
 
-Song.prototype.FetchSong = function (){
+var Player = function(){
+	this.playing = false;
+}
+
+var Song = function(song){
+	this.song = song;
+}
+
+Song.prototype.fetchSong = function (){
 	$.ajax({url: "https://api.spotify.com/v1/search?type=track&query="+this.song+"",
-  	success: this.getSongsArtistsAndCoverImages.bind(this)
-});
+  	success: 
+  	this.getSongsArtistsAndCoverImages.bind(this)
+	});
 }
 
 Song.prototype.getSongsArtistsAndCoverImages = function (songs_object){
@@ -85,24 +94,25 @@ Player.prototype.playOrPauseSong = function (){
       }
 }
 
-var Player = function(){
-	this.playing = false
-}
-
-var Song = function(song){
-	this.song = song;
+Player.prototype.showProgressBar = function() {
+	var current = $('#audio-song').prop('currentTime');
+  	$("progress").attr("value", current);
 }
 
 $(document).on("click", "#search-song-button", function (event){
 	event.preventDefault();
 	newSongSearch = new Song($("input[name=name]").val());
-	newSongSearch.FetchSong();
+	newSongSearch.fetchSong();
 })
 
 var play_music = new Player()
 $(document).on("click", ".btn-play", function(event){
 	event.preventDefault();
 	play_music.playOrPauseSong()
+})
+
+$("#audio-song").on("timeupdate",function(){
+	play_music.showProgressBar()
 })
 
 	</script>
