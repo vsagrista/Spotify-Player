@@ -7,40 +7,56 @@
     <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-	<div class="widget">
-		<form>
-			<h1>Search for a song</h1>
-			<label>Name:</label>
-			<input name="name">
-			<button type="submit" id="search-song-button" class="btn btn-primary">Search!</button>
-		</form>
-		<div class="header">
-		<div class="btn-play disabled"></div>
+<div class="modal fade js-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span>&times;</span>
+        </button>
+        <h2>About</h2>
+      </div>
+      <div class="modal-body">
+        <p>Band: <span id="band"></span></p> 
+      	<p>Genres: <span id="genres"></span> </p> 
+      	<p>Popularity: <span id="popularity"></span></p>
+      	<p>Followers: <span id="followers"></span></p> 
+      </div>
+    </div>
+  </div>
+</div>
+<div class="widget">
+	<form>
+		<h1>Search for a song</h1>
+		<label>Name:</label>
+		<input name="name">
+		<button type="submit" id="search-song-button" class="btn btn-primary">Clear</button>
+	</form>
+	<div class="header">
+	<div class="btn-play disabled"></div>
+	<div class="metadata">
+	  <p class="title">Hunger of The Pine</p>
+	  <p class="author">alt-J</p>
 
-		<div class="metadata">
-		  <p class="title">Hunger of The Pine</p>
-		  <p class="author">alt-J</p>
-
-		  <div class="seekbar">
-		    <progress value="0" max="30"></progress>
-		  </div>
-		</div>
-		</div>
-
-		<div class="cover">
-		<img id="album-img" src="https://i.scdn.co/image/04da6dfc1f5f45fdeba938a0cc71cf372524fd43">
-		</div>
-
-		<audio id="audio-song" src="https://p.scdn.co/mp3-preview/8e9c5ffdc38e91659bfe8b6bd44650dfc25a3d31"></audio>
+	  <div class="seekbar">
+	    <progress value="0" max="30"></progress>
+	  </div>
 	</div>
-	<table class="table table-striped">
-		<tr>
-			<td>Band Name</td>
-			<td>Album Name</td>
-			<td>Song</td>
-			<td>Cover Image</td>
-		</tr>
-	</table>
+	</div>
+	<div class="cover">
+	<img id="album-img" src="https://i.scdn.co/image/04da6dfc1f5f45fdeba938a0cc71cf372524fd43">
+	</div>
+
+	<audio id="audio-song" src="https://p.scdn.co/mp3-preview/8e9c5ffdc38e91659bfe8b6bd44650dfc25a3d31"></audio>
+</div>
+<table class="table table-striped">
+	<tr>
+		<td>Band Name</td>
+		<td>Album Name</td>
+		<td>Song</td>
+		<td>Cover Image</td>
+	</tr>
+</table>
 <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="bootstrap/js/bootstrap.min.js"></script>
 <script type="text/javascript">
@@ -53,31 +69,46 @@ var Song = function(song){
 	this.song = song;
 }
 
-Song.prototype.fetchSong = function (){
-	$.ajax({url: "https://api.spotify.com/v1/search?type=track&query="+this.song+"",
+Song.prototype.fetchBandInfo = function (bandIdFromApi) {
+	$.ajax({url: "https://api.spotify.com/v1/artists/"+bandIdFromApi+"",
   	success: 
-  	this.getSongsArtistsAndCoverImages.bind(this)
+  	this.renderBandInfoInModal.bind(this)
 	});
 }
 
-Song.prototype.getSongsArtistsAndCoverImages = function (songs_object){
+Song.prototype.fetchSongInfo = function () {
+	$.ajax({url: "https://api.spotify.com/v1/search?type=track&query="+this.song+"",
+  	success: 
+  	this.getSongsBandsAndCoverImages.bind(this)
+	});
+}
+
+Song.prototype.getSongsBandsAndCoverImages = function (songs_object){
 	localStorage.setItem('songs_object', JSON.stringify(songs_object));
 	window.songListLocalStored = localStorage.getItem('songs_object');
 	songListLocalStored = JSON.parse(songListLocalStored)
-	this.render(songs_object);
+	this.renderSongSearchOnHtml(songs_object);
 	this.upDatePlayerWithSearchedSong(songs_object,0);
 }
 
-Song.prototype.render = function (songs_object){	
+Song.prototype.renderSongSearchOnHtml = function (songs_object){	
 	songs_object = songs_object.tracks.items; 
 	$('.table-striped tr:gt(0)').remove();
 	for (var i=0; i<songs_object.length; i++){
 		$(".table-striped").append($(
-			"<tr> "+"<td><p>"+songs_object[i].artists[0].name+"</p></td>"+
+			"<tr> "+"<td><p>"+songs_object[i].artists[0].name+"</p><a id='"+i+"' class='band-info' href='javascript:;'>(Band Info)</a></td>"+
 			"<td><p>"+songs_object[i].album.name+"</p></td>"+
 			"<td><p>"+songs_object[i].name+"</p></td>"+
 			"<td>"+"<a id='"+i+"' class='band-pic' href='javascript:;'><img src='"+songs_object[i].album.images[1].url+"'>"+"</a></td>"+"</tr>"));
 	}
+}
+
+Song.prototype.renderBandInfoInModal = function (artist_info) {
+	$("#band").text(artist_info.name)
+	$("#genres").text(artist_info.genres.join(", "))
+	$("#popularity").text(artist_info.popularity)
+	$("#followers").text(artist_info.followers.total)
+	$(".js-modal").modal();
 }
 
 Song.prototype.upDatePlayerWithSearchedSong = function (songs_object, index){
@@ -105,23 +136,31 @@ Player.prototype.showProgressBar = function() {
 $(document).on("click", "#search-song-button", function (event){
 	event.preventDefault();
 	newSongSearch = new Song($("input[name=name]").val());
-	newSongSearch.fetchSong();
+	newSongSearch.fetchSongInfo();
 })
 
-var play_music = new Player()
-	$(document).on("click", ".btn-play", function(event){
-	event.preventDefault();
-	play_music.playOrPauseSong()
+var user_plays_song = new Player()
+
+$(document).on("click", ".btn-play", function(event){
+event.preventDefault();
+user_plays_song.playOrPauseSong()
 })
 
 $(document).on("click", ".band-pic", function(event){
 	event.preventDefault()
-	var bandID = parseInt($(this).attr('id'))
-	newSongSearch.upDatePlayerWithSearchedSong(songListLocalStored, bandID)
+	var bandIdTag = parseInt($(this).attr('id'))
+	newSongSearch.upDatePlayerWithSearchedSong(songListLocalStored, bandIdTag)
+})
+
+$(document).on("click", ".band-info", function(event){
+	event.preventDefault()
+	var bandIdTag = parseInt($(this).attr('id'))
+	var bandIdFromApi = songListLocalStored.tracks.items[bandIdTag].artists[0].id
+	newSongSearch.fetchBandInfo(bandIdFromApi)
 })
 
 $("#audio-song").on("timeupdate",function(){
-	play_music.showProgressBar()
+	user_plays_song.showProgressBar()
 })
 
 </script>
