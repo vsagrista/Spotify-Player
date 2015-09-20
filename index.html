@@ -104,10 +104,14 @@ Song.prototype.renderSongSearchOnHtml = function (songs_object){
 }
 
 Song.prototype.renderBandInfoInModal = function (artist_info) {
-	$("#band").text(artist_info.name)
-	$("#genres").text(artist_info.genres.join(", "))
-	$("#popularity").text(artist_info.popularity)
-	$("#followers").text(artist_info.followers.total)
+	$("#band").text(artist_info.name);
+	if (artist_info.genres.length === 0){
+		$("#genres").text("No genres found for this band") }
+	else {
+		$("#genres").text(artist_info.genres.join(", "));
+		}
+	$("#popularity").text(artist_info.popularity);
+	$("#followers").text(artist_info.followers.total);
 	$(".js-modal").modal();
 }
 
